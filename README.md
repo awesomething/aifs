@@ -48,3 +48,78 @@ If an `_.aifs` file _is_ found in a directory, it uses that instead of indexing 
 # Why?
 
 We built this to let [`open-interpreter`](https://openinterpreter.com/) quickly semantically search files/folders.
+
+## (Optional) Automation with Github Action
+Expected Scenario
+The operations team creates a Blob Container for document indexing.
+The development team uploads document files to the Blob Container.
+Automate document indexing using Github Action.
+Click Run Workflow to execute.
+gh1
+
+Enter the index name and the container where documents are stored.
+gh2
+
+After indexing is complete, confirm the index name and index query key to provide to the development team.
+gh3
+Github Action Configuration File
+The variables specified in the following YAML, such as vars.* and secrets.*, should be stored in Github Action's Settings under Secrets.: https://docs.github.com/en/actions/security-guides/encrypted-secrets
+
+```yml
+name: Indexing workflow
+
+on:
+  workflow_dispatch:
+    # Inputs the workflow accepts.
+    inputs:            
+      AZURE_SEARCH_INDEX:
+        description: 'Index Name'
+        default: 'gptindex-1'
+        required: true      
+        type: string    
+      AZURE_READ_STORAGE_CONTAINER_NAME:
+        description: 'Storage Container Name'
+        default: 'ragsampledoc'
+        required: true      
+        type: string
+
+jobs:
+  indexing:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11"]
+    env:
+      AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+      AZURE_READ_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_READ_STORAGE_CONNECTION_STRING }}
+      AZURE_SEARCH_SERVICE_KEY: ${{ secrets.AZURE_SEARCH_SERVICE_KEY }}
+      AZURE_OPENAI_EMB_DEPLOYMENT: ${{ vars.AZURE_OPENAI_EMB_DEPLOYMENT }}
+      AZURE_OPENAI_GPT_DEPLOYMENT: ${{ vars.AZURE_OPENAI_GPT_DEPLOYMENT }}
+      AZURE_OPENAI_SERVICE: ${{ vars.AZURE_OPENAI_SERVICE }}
+      AZURE_SEARCH_SERVICE: ${{ vars.AZURE_SEARCH_SERVICE }}
+      AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      AZURE_SEARCH_INDEX: ${{ inputs.AZURE_SEARCH_INDEX }}
+      AZURE_READ_STORAGE_CONTAINER_NAME: ${{ inputs.AZURE_READ_STORAGE_CONTAINER_NAME }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}           
+            
+      - name: Preparing files
+        run: |
+          python3 -m pip install -r requirements.txt
+          python3 downloader.py
+
+      - name: Indexing documents
+        run: |
+          pip install azure-search-documents==11.4.0a20230509004 --index-url=https://pkgs.dev.azure.com/azure-sdk/public/_packaging/azure-sdk-for-python/pypi/simple/
+          ./prepdocs.sh    
+
+      - name: Providing relavant information
+        run: |
+          echo "AZURE_SEARCH_INDEX: ${{ inputs.AZURE_SEARCH_INDEX }}"
+          echo "AZURE_SEARCH_QUERY_KEY: ${{ vars.AZURE_SEARCH_QUERY_KEY }}"
+          echo "Use search-vector.ipynb to query the index with GPT models"
+```
