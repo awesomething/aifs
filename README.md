@@ -2,7 +2,7 @@
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1QdXPchTDnzW6I_3HTZFpSeak_XoH81v5?usp=sharing)
 
-Local semantic search over folders. Why didn't this exist?
+Local semantic search over folders. Why didn't this exist? - https://github.com/Azure/azure-search-vector-samples/blob/main/demo-python/code/custom-vectorizer/api/functions/function_app.py
 
 ```shell
 pip install aifs
