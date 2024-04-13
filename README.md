@@ -6,8 +6,7 @@ Local semantic search over folders. Why didn't this exist? - https://github.com/
 
 ```shell
 pip install aifs
-pip install unstructured[all-docs] # If you want to parse all doc types. Includes large packages!
-```
+pip install unstructured[all-docs] 
 
 ```python
 from aifs import search
